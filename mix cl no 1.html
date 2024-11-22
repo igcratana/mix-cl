@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mix Columns - AES</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+        th, td {
+            width: 50px;
+            text-align: center;
+        }
+        input {
+            width: 50px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>MixColumns AES - 4x4 Matrix</h2>
+
+    <!-- Input Matrix 4x4 -->
+    <h3>Enter the 4x4 Matrix (Hex values):</h3>
+    <table>
+        <tr>
+            <td><input type="text" id="a00" maxlength="2"></td>
+            <td><input type="text" id="a01" maxlength="2"></td>
+            <td><input type="text" id="a02" maxlength="2"></td>
+            <td><input type="text" id="a03" maxlength="2"></td>
+        </tr>
+        <tr>
+            <td><input type="text" id="a10" maxlength="2"></td>
+            <td><input type="text" id="a11" maxlength="2"></td>
+            <td><input type="text" id="a12" maxlength="2"></td>
+            <td><input type="text" id="a13" maxlength="2"></td>
+        </tr>
+        <tr>
+            <td><input type="text" id="a20" maxlength="2"></td>
+            <td><input type="text" id="a21" maxlength="2"></td>
+            <td><input type="text" id="a22" maxlength="2"></td>
+            <td><input type="text" id="a23" maxlength="2"></td>
+        </tr>
+        <tr>
+            <td><input type="text" id="a30" maxlength="2"></td>
+            <td><input type="text" id="a31" maxlength="2"></td>
+            <td><input type="text" id="a32" maxlength="2"></td>
+            <td><input type="text" id="a33" maxlength="2"></td>
+        </tr>
+    </table>
+
+    <button onclick="mixColumns()">Mix Columns</button>
+
+    <h3>Resulting Matrix After MixColumns:</h3>
+    <table id="result">
+        <tr>
+            <td id="r00"></td>
+            <td id="r01"></td>
+            <td id="r02"></td>
+            <td id="r03"></td>
+        </tr>
+        <tr>
+            <td id="r10"></td>
+            <td id="r11"></td>
+            <td id="r12"></td>
+            <td id="r13"></td>
+        </tr>
+        <tr>
+            <td id="r20"></td>
+            <td id="r21"></td>
+            <td id="r22"></td>
+            <td id="r23"></td>
+        </tr>
+        <tr>
+            <td id="r30"></td>
+            <td id="r31"></td>
+            <td id="r32"></td>
+            <td id="r33"></td>
+        </tr>
+    </table>
+
+    <script>
+        // AES MixColumns fixed matrix
+        const mixMatrix = [
+            [0x02, 0x03, 0x01, 0x01],
+            [0x01, 0x02, 0x03, 0x01],
+            [0x01, 0x01, 0x02, 0x03],
+            [0x03, 0x01, 0x01, 0x02]
+        ];
+
+        // Galois Field multiplication (for MixColumns)
+        function xtime(x) {
+            return (x << 1) ^ (x & 0x80 ? 0x1b : 0);
+        }
+
+        function gmul(a, b) {
+            let result = 0;
+            for (let i = 0; i < 8; i++) {
+                if (b & 1) result ^= a;
+                let highBit = a & 0x80;
+                a = xtime(a);
+                b >>= 1;
+            }
+            return result;
+        }
+
+        // MixColumns calculation
+        function mixColumns() {
+            let matrix = [];
+            for (let row = 0; row < 4; row++) {
+                matrix[row] = [];
+                for (let col = 0; col < 4; col++) {
+                    matrix[row][col] = parseInt(document.getElementById(`a${row}${col}`).value, 16);
+                }
+            }
+
+            let result = [];
+            for (let i = 0; i < 4; i++) {
+                result[i] = [];
+                for (let j = 0; j < 4; j++) {
+                    let value = 0;
+                    for (let k = 0; k < 4; k++) {
+                        value ^= gmul(mixMatrix[i][k], matrix[k][j]);
+                    }
+                    // Ensure result is within 8-bit limit (mod 0x100)
+                    result[i][j] = (value & 0xFF).toString(16).padStart(2, '0');
+                }
+            }
+
+            // Display result
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    document.getElementById(`r${i}${j}`).innerText = result[i][j];
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
